@@ -33,11 +33,11 @@ spotifyApi
 app.get("/", (req, res, next) => {
   res.render("index");
 });
+
 app.get("/artist-search", (req, res, next) => {
   spotifyApi
     .searchArtists(req.query.artist)
     .then((data) => {
-      console.log(data.body.artists.items);
       res.render("artist-search-results", {
         results: data.body.artists.items,
       });
@@ -49,24 +49,42 @@ app.get("/artist-search", (req, res, next) => {
 
 app.get("/albums/:artistId", (req, res, next) => {
   let artistId = req.params.artistId;
-  console.log(artistId);
-  spotifyApi.getArtistAlbums(artistId).then(
+  spotifyApi.getArtistAlbums(artistId,{ limit: 10 }).then(
     function (data) {
-      /*       console.log('Artist albums', data.body.items);
-       */ res.render("albums", {
-        albums: data.body.items.map((element) => ({
-          name: element.name,
-          id: element.id,
-          image: element.images[0].url,
-        })),
-      });
+      //const cosa=JSON.parse(JSON.stringify(data.body.items));
+     /*  console.log("Artist albums", data.body.items); */
+      return data.body.items;
+     //res.render("albums",{albums:cosa})
+      //console.log(JSON.parse(JSON.stringify(data.body.items)))
+      //let name=data.body.items[0].name;
+     /*  res.render("albums", {
+        albums: [{name}]
+      }); */
     },
     function (err) {
-      console.error(err);
+    }
+  ).then(
+    (albums)=>{
+      res.render("albums",{albums})
     }
   );
 });
-// Our routes go here:
+
+app.get("/preview_tracks/:id",(req,res,next)=>{
+  let albumId=req.params.id;
+  spotifyApi.getAlbumTracks(albumId,{}).then(
+    (response)=>{
+      return response.body.items
+    },
+    (err)=>{
+      console.log(err);
+    }
+  ).then(
+    (tracks)=>{
+      res.render("tracks",{tracks})
+    }
+  )
+})
 
 app.listen(3000, () =>
   console.log("My Spotify project running on port 3000 🎧 🥁 🎸 🔊")
